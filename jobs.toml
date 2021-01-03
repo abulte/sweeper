@@ -1,0 +1,17 @@
+[main]
+tmp_dir = "/tmp/data-gw"
+
+[sirene]
+backend = "datagateway.backends.sirene.sirene:SireneBackend"
+# pipeline = [
+#     "http_download",
+#     "ssh_upload",
+#     "datagouv_update",
+# ]
+
+[sirene.config]
+source_url = "https://echanges.insee.fr/ressources/apisir-etalab/fichiers?liste"
+
+[sirene.secrets]
+basicauth_user = "SIRENE_USER"
+basicauth_password = "SIRENE_PASSWORD"
