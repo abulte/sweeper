@@ -1,4 +1,5 @@
 import os
+import shutil
 from pathlib import Path
 
 import dataset
@@ -31,3 +32,8 @@ class BaseBackend():
     def post_run(self):
         """Executed after run() in finally clause (will always run)"""
         pass
+
+    def _teardown(self):
+        """Do not override w/o calling super()"""
+        self.db.close()
+        shutil.rmtree(self.tmp_dir)

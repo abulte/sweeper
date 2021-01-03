@@ -57,8 +57,6 @@ class SireneBackend(BaseBackend):
         # TODO: continue on error
         for file in files:
             has_changed, infos = downloader.download(file["URI"], file["id"])
-            # TODO: cleanup entire backend subdirectory in base class instead?
-            self.tmp_files.append(infos["file"])
             if has_changed:
                 self.upload(infos)
             else:
@@ -77,5 +75,4 @@ class SireneBackend(BaseBackend):
             uploader.teardown()
 
     def post_run(self):
-        for file in self.tmp_files:
-            file.unlink(missing_ok=True)
+        pass

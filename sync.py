@@ -28,6 +28,7 @@ def run(job):
         jobconf.get('secrets', {})
     )
 
+    # FIXME: this is a strange abstraction (cf teardown)
     metadata = MetadataBackend(main_config, {}, {})
     metadata.start(job)
     error = None
@@ -40,8 +41,11 @@ def run(job):
         error = e
         raise e
     finally:
-        _class.post_run()
-        metadata.end(error)
+        try:
+            _class.post_run()
+        finally:
+            metadata.end(error)
+            _class._teardown()
 
 
 if __name__ == "__main__":

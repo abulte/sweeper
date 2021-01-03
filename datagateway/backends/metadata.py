@@ -20,4 +20,3 @@ class MetadataBackend(BaseBackend):
             "ended_at": datetime.utcnow(),
             "error": error,
         }, ["id"])
-        self.db.close()
