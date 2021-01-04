@@ -1,9 +1,12 @@
 import importlib
 
 import toml
+import locale
 from minicli import cli, run as clirun
 
 from datagateway.backends.metadata import MetadataBackend
+
+locale.setlocale(locale.LC_TIME, "fr_FR")
 
 
 @cli
@@ -29,6 +32,7 @@ def run(job):
     )
 
     # FIXME: this is a strange abstraction (cf teardown)
+    # maybe the db should be handled as a singleton from here anyway
     metadata = MetadataBackend(main_config, {}, {})
     metadata.start(job)
     error = None

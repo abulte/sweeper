@@ -11,12 +11,12 @@ class BaseBackend():
     name = None
 
     def __init__(self, main_config, job_config, secrets):
+        if not self.name:
+            raise Exception("No name defined for backend")
         self.main_config = main_config
         self.config = job_config
         self.secrets = {k: os.getenv(v) for k, v in secrets.items()}
         self.db = dataset.connect(DATABASE_URL)
-        if not self.name:
-            raise Exception("No name defined for backend")
         self.table = self.db[self.name]
         self.tmp_dir = Path(self.main_config["tmp_dir"]) / self.name
         self.tmp_dir.mkdir(exist_ok=True, parents=True)

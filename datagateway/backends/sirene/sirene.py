@@ -24,7 +24,7 @@
    </Fichiers>
 </ns2:ServiceDepotRetrait>
 """
-from datetime import datetime
+from datetime import datetime, date
 
 import xmltodict
 import requests
@@ -33,6 +33,7 @@ from requests.auth import HTTPBasicAuth
 from datagateway.backends.base import BaseBackend
 from datagateway.gateways.ssh import SSHGateway
 from datagateway.gateways.http import HTTPDownloadGateway
+from datagateway.gateways.datagouvfr import DataGouvFrGateway
 
 
 class SireneBackend(BaseBackend):
@@ -63,14 +64,33 @@ class SireneBackend(BaseBackend):
                 print(f"{file['id']} has not changed.")
 
     def upload(self, resource):
-        uploader = SSHGateway("maboiteprivee.fr")
+        uploader = SSHGateway(self.config["destination_host"])
+        datagouvfr = DataGouvFrGateway(self.secrets["datagouvfr_token"], demo=self.config["demo"])
         try:
-            print(f"Uploading {resource['name']}...")
-            remote = f"/root/data-gw/{resource['name']}"
+            # uploading to files.data.gouv.fr
+            remote = f"{self.config['destination_dir']}/{resource['name']}"
             uploader.upload(resource["file"], remote)
+            today = date.today().isoformat()
+            remote_date = f"{self.config['destination_dir']}/{today}-{resource['name']}"
+            uploader.upload(resource["file"], remote_date)
+            # update datagouvfr
+            title = resource["name"].replace("_utf8.zip", "")
+            if resource["name"] not in self.config["mapping"]:
+                print(f"{resource['name']} not found in mapping")
+                return
+            res = datagouvfr.remote_replace_resource(
+                self.config["dataset_id"],
+                self.config["mapping"][resource["name"]],
+                f"https://files.data.gouv.fr/insee-sirene/{resource['name']}",
+                f"Fichier {title} du {datetime.now().strftime('%d %B %Y')}",
+                filesize=resource["size"],
+                checksum={"value": resource["sha1sum"], "type": "sha1"},
+            )
+            # keep track in DB
             resource.pop("file")
             resource["created_at"] = datetime.utcnow()
             self.table.insert(resource)
+            return res
         finally:
             uploader.teardown()
 

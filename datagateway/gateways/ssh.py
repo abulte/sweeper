@@ -1,4 +1,5 @@
 from paramiko import SSHClient, SFTPClient
+from progressist import ProgressBar
 
 
 class SSHGateway():
@@ -7,13 +8,20 @@ class SSHGateway():
         self.ssh = SSHClient()
         self.ssh.load_system_host_keys()
         self.ssh.connect(host, username=username)
+        self.host = host
         self.sftp = SFTPClient.from_transport(self.ssh.get_transport())
 
     def upload(self, local, remote):
-        # TODO: plug callback func(int, int)) that accepts the bytes transferred
-        # so far and the total bytes to be transferred
-        # and progress bar \o/
-        self.sftp.put(local, remote)
+        bar = ProgressBar(
+            template="|{animation}| {done:B}/{total:B} ({speed:B}/s)",
+            steps=["‡", "="],
+        )
+
+        def cb(done, total):
+            bar.update(done=done, total=total)
+
+        print(f"Uploading {local} to {self.host}:{remote}...")
+        self.sftp.put(local, remote, callback=cb)
 
     def teardown(self):
         self.sftp.close()

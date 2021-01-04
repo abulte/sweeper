@@ -3,15 +3,26 @@ tmp_dir = "/tmp/data-gw"
 
 [sirene]
 backend = "datagateway.backends.sirene.sirene:SireneBackend"
-# pipeline = [
-#     "http_download",
-#     "ssh_upload",
-#     "datagouv_update",
-# ]
 
 [sirene.config]
-source_url = "https://echanges.insee.fr/ressources/apisir-etalab/fichiers?liste"
+demo = true
+# source_url = "https://echanges.insee.fr/ressources/apisir-etalab/fichiers?liste"
+source_url = "https://www.maboiteprivee.fr/sirene/list.xml"
+dataset_id = "5b7ffc618b4c4169d30727e0"
+destination_host = "maboiteprivee.fr"
+destination_dir = "/root/data-gw"
+
+[sirene.config.mapping]
+# PROD
+# "StockEtablissementHistorique_utf8.zip" = "d21f3c4b-104f-4470-a552-c207c46dadff"
+# "StockEtablissementLiensSuccession_utf8.zip" = "e4521e88-d541-42c9-9dab-3975f2e5235e"
+# "StockEtablissement_utf8.zip" = "0422d619-a7c9-45da-bdf3-c21d5f3881dc"
+# "StockUniteLegaleHistorique_utf8.zip" = "a0bb88c0-5a38-45bf-967b-add333594a8f"
+# "StockUniteLegale_utf8.zip" = "ef1415ce-1bb2-4d0b-a5f2-468b8dc809d7"
+# DEMO
+"StockEtablissement_utf8.zip" = "afc7986c-ef6c-42e1-989c-0a9a498dd6f0"
 
 [sirene.secrets]
 basicauth_user = "SIRENE_USER"
 basicauth_password = "SIRENE_PASSWORD"
+datagouvfr_token = "DATAGOUVFR_TOKEN"
