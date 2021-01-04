@@ -2,6 +2,8 @@
 
 `sweeper` moves data (files) around.
 
+![](https://giphy.com/embed/kEWvxeoP9b1HShmFes)
+
 ## TODO
 
 - [ ] s3 gateway
