@@ -2,7 +2,7 @@
 
 `sweeper` moves data (files) around.
 
-![](https://giphy.com/embed/kEWvxeoP9b1HShmFes)
+![](https://media.giphy.com/media/kEWvxeoP9b1HShmFes/giphy.gif)
 
 ## TODO
 
