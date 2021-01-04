@@ -1,5 +1,5 @@
 from paramiko import SSHClient, SFTPClient
-from progressist import ProgressBar
+from datagateway.utils.progress import ProgressBar
 
 
 class SSHGateway():
@@ -14,7 +14,6 @@ class SSHGateway():
     def upload(self, local, remote):
         bar = ProgressBar(
             template="|{animation}| {done:B}/{total:B} ({speed:B}/s)",
-            steps=["‡", "="],
         )
 
         def cb(done, total):

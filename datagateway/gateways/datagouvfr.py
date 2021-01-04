@@ -16,6 +16,7 @@ class DataGouvFrGateway():
     #             break
     #         yield data
 
+    # TODO: try chunked upload (see above)
     def upload_replace_resource(self, dataset_id, resource_id, filepath, **kwargs):
         files = {'file': open(filepath, 'rb')}
         r = requests.post(

@@ -1,7 +1,7 @@
 import hashlib
 
 import requests
-from progressist import ProgressBar
+from datagateway.utils.progress import ProgressBar
 
 
 class HTTPDownloadGateway():
@@ -24,7 +24,7 @@ class HTTPDownloadGateway():
 
     def download(self, url, file_id):
         sha1sum = hashlib.sha1()
-        size = None
+        size = 0
         with requests.get(url, stream=True, auth=self.auth) as r:
             if 'content-length' in r.headers:
                 size = int(r.headers['content-length'])
@@ -33,8 +33,8 @@ class HTTPDownloadGateway():
             print(f"Downloading {file_id}...")
             r.raise_for_status()
             bar = ProgressBar(
-                animation="{stream}",
-                steps=["‡", "="],
+                animation="{stream}" if not size else "{progress}",
+                steps=["~", "=", "•"],
                 total=size,
                 template="|{animation}| {done:B}/{total:B} ({speed:B}/s)",
             )
