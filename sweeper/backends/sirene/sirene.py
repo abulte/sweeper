@@ -30,10 +30,10 @@ import xmltodict
 import requests
 from requests.auth import HTTPBasicAuth
 
-from datagateway.backends.base import BaseBackend
-from datagateway.gateways.ssh import SSHGateway
-from datagateway.gateways.http import HTTPDownloadGateway
-from datagateway.gateways.datagouvfr import DataGouvFrGateway
+from sweeper.backends.base import BaseBackend
+from sweeper.gateways.ssh import SSHGateway
+from sweeper.gateways.http import HTTPDownloadGateway
+from sweeper.gateways.datagouvfr import DataGouvFrGateway
 
 
 class SireneBackend(BaseBackend):

@@ -4,7 +4,7 @@ import toml
 import locale
 from minicli import cli, run as clirun
 
-from datagateway.backends.metadata import MetadataBackend
+from sweeper.backends.metadata import MetadataBackend
 
 locale.setlocale(locale.LC_TIME, "fr_FR")
 

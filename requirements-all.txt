@@ -1,2 +1,2 @@
 -r requirements.txt
--r datagateway/backends/sirene/requirements.txt
+-r sweeper/backends/sirene/requirements.txt

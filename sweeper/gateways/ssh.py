@@ -1,5 +1,5 @@
 from paramiko import SSHClient, SFTPClient
-from datagateway.utils.progress import ProgressBar
+from sweeper.utils.progress import ProgressBar
 
 
 class SSHGateway():

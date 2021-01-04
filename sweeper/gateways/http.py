@@ -1,7 +1,7 @@
 import hashlib
 
 import requests
-from datagateway.utils.progress import ProgressBar
+from sweeper.utils.progress import ProgressBar
 
 
 class HTTPDownloadGateway():

@@ -18,4 +18,5 @@ class ProgressBar(ProgressistProgressBar):
             throttle = timedelta(seconds=60)
             kwargs["throttle"] = throttle
         super().__init__(**kwargs)
-        self.template = self.template.replace('\r', '') + '\n'
+        if not self.is_terminal:
+            self.template = self.template.replace('\r', '') + '\n'
