@@ -1,10 +1,9 @@
 import os
 import shutil
+from datetime import datetime
 from pathlib import Path
 
-import dataset
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///jobs.db")
+from sweeper import get_db
 
 
 class BaseBackend():
@@ -16,8 +15,7 @@ class BaseBackend():
         self.main_config = main_config
         self.config = job_config
         self.secrets = {k: os.getenv(v) for k, v in secrets.items()}
-        self.db = dataset.connect(DATABASE_URL)
-        self.table = self.db[self.name]
+        self.table = get_db()[self.name]
         self.tmp_dir = Path(self.main_config["tmp_dir"]) / self.name
         self.tmp_dir.mkdir(exist_ok=True, parents=True)
 
@@ -35,5 +33,20 @@ class BaseBackend():
 
     def _teardown(self):
         """Do not override w/o calling super()"""
-        self.db.close()
         shutil.rmtree(self.tmp_dir)
+
+    def file_has_changed(self, filename, sha1sum=None, size=None):
+        """Has file changed vs latest info from DB?"""
+        res = self.table.find_one(name=filename, order_by='-created_at', _limit=1)
+        if not res:
+            return True
+        elif sha1sum and sha1sum != res["sha1sum"]:
+            return True
+        elif size and size != res["size"]:
+            return True
+        return False
+
+    def store_file_info(self, **kwargs):
+        """Store info from file in DB"""
+        kwargs["created_at"] = datetime.utcnow()
+        self.table.insert(kwargs)

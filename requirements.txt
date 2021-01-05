@@ -1,5 +1,0 @@
-minicli
-requests
-toml
-dataset
-progressist

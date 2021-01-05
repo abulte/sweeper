@@ -6,21 +6,11 @@ from sweeper.utils.progress import ProgressBar
 
 class HTTPDownloadGateway():
 
-    def __init__(self, job_table, tmp_dir, auth=None, chunk_size=8192):
+    def __init__(self, has_changed, tmp_dir, auth=None, chunk_size=8192):
         self.chunk_size = chunk_size
         self.auth = auth
         self.tmp_dir = tmp_dir
-        self.table = job_table
-
-    def has_changed(self, filename, sha1sum=None, size=None):
-        res = self.table.find_one(name=filename, order_by='-created_at', _limit=1)
-        if not res:
-            return True
-        elif sha1sum and sha1sum != res["sha1sum"]:
-            return True
-        elif size and size != res["size"]:
-            return True
-        return False
+        self.has_changed = has_changed
 
     def download(self, url, file_id):
         sha1sum = hashlib.sha1()

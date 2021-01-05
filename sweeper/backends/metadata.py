@@ -12,9 +12,13 @@ class MetadataBackend(BaseBackend):
             "job": job,
         })
 
-    def end(self, error):
-        if error:
-            error = str(error)
+    def end(self, meta_error, run_errors):
+        error = None
+        if meta_error:
+            error = str(meta_error)
+        if run_errors:
+            error = '' if not error else error
+            error += ' | ' + ' | '.join([' - '.join(str(e)) for e in run_errors])
         self.table.update({
             "id": self.id,
             "ended_at": datetime.utcnow(),

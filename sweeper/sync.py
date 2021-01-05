@@ -2,20 +2,21 @@ import importlib
 
 import toml
 import locale
-from minicli import cli, run as clirun
+from minicli import cli, run as clirun, wrap
 
+from sweeper import close_db
 from sweeper.backends.metadata import MetadataBackend
 
 locale.setlocale(locale.LC_TIME, "fr_FR")
 
 
 @cli
-def run(job):
+def run(job, config="jobs.toml"):
     """Run a job sync
 
     :job: name of the job section in jobs.toml
     """
-    with open("jobs.toml") as cfile:
+    with open(config) as cfile:
         config = toml.loads(cfile.read())
     main_config = config.get('main', {})
     if job not in config:
@@ -35,21 +36,28 @@ def run(job):
     # maybe the db should be handled as a singleton from here anyway
     metadata = MetadataBackend(main_config, {}, {})
     metadata.start(job)
-    error = None
+    meta_error = None
+    run_errors = None
     try:
         _class.pre_run()
-        _class.run()
+        run_errors = _class.run()
     except KeyboardInterrupt:
-        error = 'Cancelled by user'
+        meta_error = 'Cancelled by user'
     except Exception as e:
-        error = e
+        meta_error = e
         raise e
     finally:
         try:
             _class.post_run()
         finally:
-            metadata.end(error)
+            metadata.end(meta_error, run_errors)
             _class._teardown()
+
+
+@wrap
+def close_db_after():
+    yield
+    close_db()
 
 
 if __name__ == "__main__":

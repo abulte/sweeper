@@ -1,0 +1,11 @@
+[main]
+tmp_dir = "/tmp/data-gw-test"
+
+[test]
+backend = "sweeper.tests.backends.backend:TestBackend"
+
+[test.config]
+foo = "bar"
+
+[test.secrets]
+test_secret = "DATABASE_URL"

@@ -40,7 +40,7 @@ class SireneBackend(BaseBackend):
     name = "sirene"
 
     def pre_run(self):
-        self.tmp_files = []
+        pass
 
     def run(self):
         source_url = self.config["source_url"]
@@ -53,15 +53,21 @@ class SireneBackend(BaseBackend):
         xmldict = xmltodict.parse(r.text)
         files = xmldict['ns2:ServiceDepotRetrait']['Fichiers']
 
-        downloader = HTTPDownloadGateway(self.table, self.tmp_dir, auth=auth)
+        downloader = HTTPDownloadGateway(self.file_has_changed, self.tmp_dir, auth=auth)
 
-        # TODO: continue on error
+        errors = []
+
         for file in files:
-            has_changed, infos = downloader.download(file["URI"], file["id"])
-            if has_changed:
-                self.upload(infos)
-            else:
-                print(f"{file['id']} has not changed.")
+            try:
+                has_changed, infos = downloader.download(file["URI"], file["id"])
+                if has_changed:
+                    self.upload(infos)
+                else:
+                    print(f"{file['id']} has not changed.")
+            except Exception as e:
+                print(f"[error] {file['id']}: {e}")
+                errors.append(({file['id']}, e))
+                continue
 
     def upload(self, resource):
         uploader = SSHGateway(self.config["destination_host"])
@@ -88,8 +94,7 @@ class SireneBackend(BaseBackend):
             )
             # keep track in DB
             resource.pop("file")
-            resource["created_at"] = datetime.utcnow()
-            self.table.insert(resource)
+            self.store_file_info(**resource)
             return res
         finally:
             uploader.teardown()

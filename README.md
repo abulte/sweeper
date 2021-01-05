@@ -9,4 +9,5 @@
 - [ ] s3 gateway
 - [ ] refactor metadata abstraction and db connection
 - [ ] chunked upload to datagouvfr (RAM limitations, true story)
+- [ ] logger
 - [ ] tests

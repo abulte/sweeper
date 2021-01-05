@@ -2,7 +2,7 @@
 tmp_dir = "/tmp/data-gw"
 
 [sirene]
-backend = "sweeper.backends.sirene.sirene:SireneBackend"
+backend = "sweeper.backends.sirene:SireneBackend"
 
 [sirene.config]
 demo = true
