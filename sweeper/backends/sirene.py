@@ -34,6 +34,7 @@ from sweeper.backends.base import BaseBackend
 from sweeper.gateways.ssh import SSHGateway
 from sweeper.gateways.http import HTTPDownloadGateway
 from sweeper.gateways.datagouvfr import DataGouvFrGateway
+from sweeper.models import Resource
 
 
 class SireneBackend(BaseBackend):
@@ -55,8 +56,6 @@ class SireneBackend(BaseBackend):
 
         downloader = HTTPDownloadGateway(self.file_has_changed, self.tmp_dir, auth=auth)
 
-        errors = []
-
         for file in files:
             try:
                 has_changed, infos = downloader.download(file["URI"], file["id"])
@@ -65,36 +64,34 @@ class SireneBackend(BaseBackend):
                 else:
                     print(f"{file['id']} has not changed.")
             except Exception as e:
-                print(f"[error] {file['id']}: {e}")
-                errors.append(({file['id']}, e))
+                self.register_error(Resource(name=file["id"], error=str(e)))
                 continue
 
-    def upload(self, resource):
+    def upload(self, resource: Resource):
         uploader = SSHGateway(self.config["destination_host"])
         datagouvfr = DataGouvFrGateway(self.secrets["datagouvfr_token"], demo=self.config["demo"])
         try:
             # uploading to files.data.gouv.fr
-            remote = f"{self.config['destination_dir']}/{resource['name']}"
-            uploader.upload(resource["file"], remote)
+            remote = f"{self.config['destination_dir']}/{resource.name}"
+            uploader.upload(resource.file, remote)
             today = date.today().isoformat()
-            remote_date = f"{self.config['destination_dir']}/{today}-{resource['name']}"
-            uploader.upload(resource["file"], remote_date)
+            remote_date = f"{self.config['destination_dir']}/{today}-{resource.name}"
+            uploader.upload(resource.file, remote_date)
             # update datagouvfr
-            title = resource["name"].replace("_utf8.zip", "")
-            if resource["name"] not in self.config["mapping"]:
-                print(f"{resource['name']} not found in mapping")
+            title = resource.name.replace("_utf8.zip", "")
+            if resource.name not in self.config["mapping"]:
+                print(f"{resource.name} not found in mapping")
                 return
             res = datagouvfr.remote_replace_resource(
                 self.config["dataset_id"],
-                self.config["mapping"][resource["name"]],
-                f"https://files.data.gouv.fr/insee-sirene/{resource['name']}",
+                self.config["mapping"][resource.name],
+                f"https://files.data.gouv.fr/insee-sirene/{resource.name}",
                 f"Fichier {title} du {datetime.now().strftime('%d %B %Y')}",
-                filesize=resource["size"],
-                checksum={"value": resource["sha1sum"], "type": "sha1"},
+                filesize=resource.size,
+                checksum={"value": resource.sha1sum, "type": "sha1"},
             )
             # keep track in DB
-            resource.pop("file")
-            self.store_file_info(**resource)
+            self.register_file(resource)
             return res
         finally:
             uploader.teardown()

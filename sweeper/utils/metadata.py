@@ -4,6 +4,8 @@ from sweeper import get_db
 
 
 class Metadata():
+    id = None
+    table = None
 
     def __init__(self):
         db = get_db()
@@ -16,14 +18,10 @@ class Metadata():
         })
 
     def end(self, main_error, run_errors):
-        error = None
-        if main_error:
-            error = str(main_error)
-        if run_errors:
-            error = '' if not error else error
-            error += ' | ' + ' | '.join([' - '.join(str(e)) for e in run_errors])
+        error = main_error
         self.table.update({
             "id": self.id,
             "ended_at": datetime.utcnow(),
             "error": error,
+            "has_run_errors": False,
         }, ["id"])

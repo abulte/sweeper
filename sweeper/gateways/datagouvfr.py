@@ -28,7 +28,7 @@ class DataGouvFrGateway():
         return r.json()
 
     def upload_add_resource(self, dataset_id, filepath, type='main', **kwargs):
-        raise
+        raise NotImplementedError
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs):
         resource_url = f"{self.domain}/datasets/{dataset_id}/#resource-{resource_id}"
@@ -44,4 +44,4 @@ class DataGouvFrGateway():
         return r.json()
 
     def remote_add_resource(self, dataset_id, url, title, **kwargs):
-        pass
+        raise NotImplementedError

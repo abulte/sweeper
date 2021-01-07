@@ -1,7 +1,9 @@
 import hashlib
+from typing import Tuple
 
 import requests
 from sweeper.utils.progress import ProgressBar
+from sweeper.models import Resource
 
 
 class HTTPDownloadGateway():
@@ -12,14 +14,14 @@ class HTTPDownloadGateway():
         self.tmp_dir = tmp_dir
         self.has_changed = has_changed
 
-    def download(self, url, file_id):
+    def download(self, url, file_id) -> Tuple[bool, Resource]:
         sha1sum = hashlib.sha1()
         size = 0
         with requests.get(url, stream=True, auth=self.auth) as r:
             if 'content-length' in r.headers:
                 size = int(r.headers['content-length'])
                 if not self.has_changed(file_id, size=size):
-                    return False, {}
+                    return False, Resource(name=file_id)
             print(f"Downloading {file_id}...")
             r.raise_for_status()
             bar = ProgressBar(
@@ -37,9 +39,9 @@ class HTTPDownloadGateway():
                     count += 1
                     bar.update(done=count * self.chunk_size)
         has_changed = self.has_changed(file_id, sha1sum=sha1sum.hexdigest())
-        return has_changed, {
+        return has_changed, Resource(**{
             "file": ofile_path,
             "name": file_id,
             "sha1sum": sha1sum.hexdigest(),
             "size": ofile_path.stat().st_size,
-        }
+        })

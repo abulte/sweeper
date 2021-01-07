@@ -21,6 +21,7 @@ destination_dir = "/root/data-gw"
 # "StockUniteLegale_utf8.zip" = "ef1415ce-1bb2-4d0b-a5f2-468b8dc809d7"
 # DEMO
 "StockEtablissement_utf8.zip" = "afc7986c-ef6c-42e1-989c-0a9a498dd6f0"
+"StockUniteLegaleHistorique_utf8.zip" = "25d25e9e-e8dd-48b1-8707-56ac1c453f06"
 
 [sirene.secrets]
 basicauth_user = "SIRENE_USER"
