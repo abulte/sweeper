@@ -23,5 +23,5 @@ class Metadata():
             "id": self.id,
             "ended_at": datetime.utcnow(),
             "error": error,
-            "has_run_errors": False,
+            "has_run_errors": len(run_errors) > 0,
         }, ["id"])
