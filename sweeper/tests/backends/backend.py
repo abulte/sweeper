@@ -2,7 +2,7 @@ from sweeper.backends.base import BaseBackend
 
 
 class TestBackend(BaseBackend):
-    name = "test_backend"
+    name = "test"
 
     def run(self):
         pass

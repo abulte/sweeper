@@ -1,10 +1,10 @@
 import importlib
 
-import toml
 import locale
 from minicli import cli, run as clirun, wrap
 
 from sweeper import close_db
+from sweeper.utils.config import load as load_config
 from sweeper.utils.metadata import Metadata
 
 locale.setlocale(locale.LC_TIME, "fr_FR")
@@ -16,26 +16,14 @@ def run(job, config="jobs.toml"):
 
     :job: name of the job section in jobs.toml
     """
-    with open(config) as cfile:
-        config = toml.loads(cfile.read())
-    main_config = config.get('main', {})
-    if job not in config:
-        print(f"Unknown job {job}")
-        return
-    jobconf = config[job]
-
-    _mod, _class = jobconf["backend"].split(':')
+    config = load_config(config, job)
+    _mod, _class = config[job]["backend"].split(':')
     _mod = importlib.import_module(_mod)
 
     metadata = Metadata()
     metadata.start(job)
 
-    job = getattr(_mod, _class)(
-        metadata.id,
-        main_config,
-        jobconf.get('config', {}),
-        jobconf.get('secrets', {})
-    )
+    job = getattr(_mod, _class)(metadata.id, config)
 
     main_error = None
     try:
