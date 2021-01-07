@@ -12,3 +12,10 @@ def get_db():
 
 def close_db():
     context["db"].close()
+
+
+def clean_db():
+    db = get_db()
+    tables = db.tables
+    for table in tables:
+        db[table].drop()

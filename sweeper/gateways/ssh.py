@@ -9,7 +9,11 @@ class SSHGateway():
         self.ssh.load_system_host_keys()
         self.ssh.connect(host, username=username)
         self.host = host
-        self.sftp = SFTPClient.from_transport(self.ssh.get_transport())
+        transport = self.ssh.get_transport()
+        if transport is not None:
+            self.sftp = SFTPClient.from_transport(transport)
+        else:
+            raise Exception("Failed to get ssh transport")
 
     def upload(self, local, remote):
         bar = ProgressBar(

@@ -2,10 +2,34 @@
 tmp_dir = "/tmp/data-gw-test"
 
 [test]
-backend = "sweeper.tests.backends.backend:TestBackend"
+backend = "sweeper.tests.backends.backend_test:TestBackend"
 
 [test.config]
 foo = "bar"
 
 [test.secrets]
 test_secret = "DATABASE_URL"
+
+[test_error]
+backend = "sweeper.tests.backends.backend_test:TestBackendError"
+
+[test_run_error]
+backend = "sweeper.tests.backends.backend_test:TestBackendErrorRunError"
+
+[sirene]
+backend = "sweeper.backends.sirene:SireneBackend"
+
+[sirene.config]
+demo = false
+source_url = "https://example.com/list.xml"
+dataset_id = "dataset_id"
+destination_host = "example.com"
+destination_dir = "/root/data-gw"
+
+[sirene.config.mapping]
+"monfichier.zip" = "resource_id"
+
+[sirene.secrets]
+basicauth_user = "xxx"
+basicauth_password = "xxx"
+datagouvfr_token = "xxx"

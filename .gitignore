@@ -1,2 +1,3 @@
 jobs.db*
 *.egg-info
+.coverage

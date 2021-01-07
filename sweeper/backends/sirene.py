@@ -45,19 +45,26 @@ class SireneBackend(BaseBackend):
 
     def run(self):
         source_url = self.config["source_url"]
-        auth = HTTPBasicAuth(
-            self.secrets["basicauth_user"],
-            self.secrets["basicauth_password"],
-        )
+        auth = None
+        if self.secrets["basicauth_user"]:
+            auth = HTTPBasicAuth(
+                self.secrets["basicauth_user"],
+                self.secrets["basicauth_password"],
+            )
         r = requests.get(source_url, auth=auth)
         assert r.status_code == 200, "bad response from list"
         xmldict = xmltodict.parse(r.text)
         files = xmldict['ns2:ServiceDepotRetrait']['Fichiers']
+        if not isinstance(files, list):
+            files = [files]
 
         downloader = HTTPDownloadGateway(self.file_has_changed, self.tmp_dir, auth=auth)
 
         for file in files:
             try:
+                if file["id"] not in self.config["mapping"]:
+                    print(f"{file['id']} not found in mapping")
+                    continue
                 has_changed, infos = downloader.download(file["URI"], file["id"])
                 if has_changed:
                     self.upload(infos)
@@ -65,6 +72,8 @@ class SireneBackend(BaseBackend):
                     print(f"{file['id']} has not changed.")
             except Exception as e:
                 self.register_error(Resource(name=file["id"], error=str(e)))
+                # FIXME:
+                raise
                 continue
 
     def upload(self, resource: Resource):
@@ -79,9 +88,6 @@ class SireneBackend(BaseBackend):
             uploader.upload(resource.file, remote_date)
             # update datagouvfr
             title = resource.name.replace("_utf8.zip", "")
-            if resource.name not in self.config["mapping"]:
-                print(f"{resource.name} not found in mapping")
-                return
             res = datagouvfr.remote_replace_resource(
                 self.config["dataset_id"],
                 self.config["mapping"][resource.name],

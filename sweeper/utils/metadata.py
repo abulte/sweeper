@@ -18,7 +18,7 @@ class Metadata():
         })
 
     def end(self, main_error, run_errors):
-        error = main_error
+        error = str(main_error) if main_error else None
         self.table.update({
             "id": self.id,
             "ended_at": datetime.utcnow(),

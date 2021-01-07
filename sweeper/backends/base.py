@@ -11,13 +11,13 @@ from sweeper.models import Resource
 class BaseBackend():
     name = None
 
-    def __init__(self, metadata_id, config):
+    def __init__(self, metadata_id: int, config: dict):
         if not self.name:
             raise Exception("No name defined for backend")
         self.metadata_id = metadata_id
-        self.config = config[self.name]
+        self.config = config[self.name].get("config", {})
         self.errors = []
-        secrets = config.get("secrets", {})
+        secrets = config[self.name].get("secrets", {})
         self.secrets = {k: os.getenv(v) for k, v in secrets.items()}
         self.table = get_db()[self.name]
         self.tmp_dir = Path(config["main"]["tmp_dir"]) / self.name
