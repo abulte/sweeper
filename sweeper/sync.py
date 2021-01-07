@@ -5,7 +5,7 @@ import locale
 from minicli import cli, run as clirun, wrap
 
 from sweeper import close_db
-from sweeper.backends.metadata import MetadataBackend
+from sweeper.utils.metadata import Metadata
 
 locale.setlocale(locale.LC_TIME, "fr_FR")
 
@@ -32,25 +32,25 @@ def run(job, config="jobs.toml"):
         jobconf.get('secrets', {})
     )
 
-    # FIXME: this is a strange abstraction (cf teardown)
-    # maybe the db should be handled as a singleton from here anyway
-    metadata = MetadataBackend(main_config, {}, {})
+    metadata = Metadata()
     metadata.start(job)
-    meta_error = None
+    main_error = None
+    # TODO: store run_errors in job table instead?
+    # makes more sense since it's file by file
     run_errors = None
     try:
         _class.pre_run()
         run_errors = _class.run()
     except KeyboardInterrupt:
-        meta_error = 'Cancelled by user'
+        main_error = 'Cancelled by user'
     except Exception as e:
-        meta_error = e
+        main_error = e
         raise e
     finally:
         try:
             _class.post_run()
         finally:
-            metadata.end(meta_error, run_errors)
+            metadata.end(main_error, run_errors)
             _class._teardown()
 
 

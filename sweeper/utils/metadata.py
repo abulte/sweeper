@@ -1,10 +1,13 @@
 from datetime import datetime
 
-from .base import BaseBackend
+from sweeper import get_db
 
 
-class MetadataBackend(BaseBackend):
-    name = "metadata"
+class Metadata():
+
+    def __init__(self):
+        db = get_db()
+        self.table = db["metadata"]
 
     def start(self, job):
         self.id = self.table.insert({
@@ -12,10 +15,10 @@ class MetadataBackend(BaseBackend):
             "job": job,
         })
 
-    def end(self, meta_error, run_errors):
+    def end(self, main_error, run_errors):
         error = None
-        if meta_error:
-            error = str(meta_error)
+        if main_error:
+            error = str(main_error)
         if run_errors:
             error = '' if not error else error
             error += ' | ' + ' | '.join([' - '.join(str(e)) for e in run_errors])
