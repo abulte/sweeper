@@ -1,6 +1,10 @@
+import logging
+
 from paramiko import SSHClient, SFTPClient
 
 from sweeper.utils.progress import ProgressBar
+
+log = logging.getLogger(__name__)
 
 
 class SSHGateway():
@@ -24,7 +28,7 @@ class SSHGateway():
         def cb(done, total):
             bar.update(done=done, total=total)
 
-        print(f"Uploading {local} to {self.host}:{remote}...")
+        log.info(f"Uploading {local} to {self.host}:{remote}...")
         self.sftp.put(local, remote, callback=cb)
 
     def teardown(self):

@@ -11,7 +11,8 @@ def get_db():
 
 
 def close_db():
-    context["db"].close()
+    if "db" in context:
+        context["db"].close()
 
 
 def clean_db():

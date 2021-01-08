@@ -1,4 +1,6 @@
+import logging
 import math
+import typing
 
 from uuid import uuid4
 from pathlib import Path
@@ -7,9 +9,13 @@ import requests
 
 from sweeper.utils.progress import ProgressBar
 
+log = logging.getLogger(__name__)
+
 
 class DataGouvFrGateway():
-    def __init__(self, token: str, demo=False):
+    def __init__(self, token: typing.Optional[str], demo=False):
+        if not token:
+            raise ValueError("Please provide an API token")
         self.token = token
         self.domain = f"https://{'demo' if demo else 'www'}.data.gouv.fr"
         self.base_url = f"{self.domain}/api/1"
@@ -65,7 +71,7 @@ class DataGouvFrGateway():
     ) -> dict:
         chunk_size = 2000000
         url = f"{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/"
-        print(f"Replacing file resource {url}...")
+        log.info(f"Replacing file resource {url}...")
         if filepath.stat().st_size <= chunk_size:
             r = requests.post(
                 url,
@@ -89,7 +95,7 @@ class DataGouvFrGateway():
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -> dict:
         resource_url = f"{self.domain}/datasets/{dataset_id}/#resource-{resource_id}"
-        print(f"Replacing remote resource {resource_url}: {title} | {url}...")
+        log.info(f"Replacing remote resource {resource_url}: {title} | {url}...")
         return self.update_resource(dataset_id, resource_id, **{
             "title": title,
             "url": url,

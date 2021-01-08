@@ -1,11 +1,14 @@
 import os
 import shutil
+import logging
 
 from datetime import datetime
 from pathlib import Path
 
 from sweeper import get_db
 from sweeper.models import Resource
+
+log = logging.getLogger(__name__)
 
 
 class BaseBackend():
@@ -60,6 +63,6 @@ class BaseBackend():
 
     def register_error(self, resource: Resource):
         assert resource.error is not None
-        print(f"[error] {resource}")
+        log.error(f"[error] {resource}")
         self.errors.append(resource)
         self.register_file(resource)

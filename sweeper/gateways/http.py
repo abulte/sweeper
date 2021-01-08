@@ -1,10 +1,14 @@
 import hashlib
+import logging
+
 from pathlib import Path
 from typing import Tuple, Callable
 
 import requests
 from sweeper.utils.progress import ProgressBar
 from sweeper.models import Resource
+
+log = logging.getLogger(__name__)
 
 
 class HTTPDownloadGateway():
@@ -23,7 +27,7 @@ class HTTPDownloadGateway():
                 size = int(r.headers['content-length'])
                 if not self.has_changed(file_id, size=size):
                     return False, Resource(name=file_id, size=size)
-            print(f"Downloading {file_id}...")
+            log.info(f"Downloading {file_id}...")
             r.raise_for_status()
             bar = ProgressBar(
                 animation="{stream}" if not size else "{progress}",

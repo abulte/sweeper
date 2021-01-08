@@ -24,6 +24,7 @@
    </Fichiers>
 </ns2:ServiceDepotRetrait>
 """
+import logging
 from datetime import datetime, date
 
 import xmltodict
@@ -35,6 +36,8 @@ from sweeper.gateways.ssh import SSHGateway
 from sweeper.gateways.http import HTTPDownloadGateway
 from sweeper.gateways.datagouvfr import DataGouvFrGateway
 from sweeper.models import Resource
+
+log = logging.getLogger(__name__)
 
 
 class SireneBackend(BaseBackend):
@@ -63,17 +66,15 @@ class SireneBackend(BaseBackend):
         for file in files:
             try:
                 if file["id"] not in self.config["mapping"]:
-                    print(f"{file['id']} not found in mapping")
+                    log.warning(f"{file['id']} not found in mapping")
                     continue
                 has_changed, infos = downloader.download(file["URI"], file["id"])
                 if has_changed:
                     self.upload(infos)
                 else:
-                    print(f"{file['id']} has not changed.")
+                    log.info(f"{file['id']} has not changed.")
             except Exception as e:
                 self.register_error(Resource(name=file["id"], error=str(e)))
-                # FIXME:
-                raise
                 continue
 
     def upload(self, resource: Resource):

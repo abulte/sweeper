@@ -1,6 +1,7 @@
 import importlib
-
 import locale
+
+import coloredlogs
 from minicli import cli, run as clirun, wrap
 
 from sweeper import close_db
@@ -11,11 +12,14 @@ locale.setlocale(locale.LC_TIME, "fr_FR")
 
 
 @cli
-def run(job, config="jobs.toml"):
+def run(job, config="jobs.toml", quiet=False):
     """Run a job sync
 
     :job: name of the job section in jobs.toml
     """
+    level = "DEBUG" if not quiet else "INFO"
+    coloredlogs.install(level=level, fmt="%(asctime)s %(name)s %(levelname)s %(message)s")
+
     config = load_config(config, job)
     _mod, _class = config[job]["backend"].split(':')
     _mod = importlib.import_module(_mod)
@@ -43,7 +47,7 @@ def run(job, config="jobs.toml"):
 
 
 @wrap
-def close_db_after():
+def setup():
     yield
     close_db()
 
