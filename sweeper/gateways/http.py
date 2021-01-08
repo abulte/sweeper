@@ -1,5 +1,6 @@
 import hashlib
-from typing import Tuple
+from pathlib import Path
+from typing import Tuple, Callable
 
 import requests
 from sweeper.utils.progress import ProgressBar
@@ -8,20 +9,20 @@ from sweeper.models import Resource
 
 class HTTPDownloadGateway():
 
-    def __init__(self, has_changed, tmp_dir, auth=None, chunk_size=8192):
+    def __init__(self, has_changed: Callable[..., bool], tmp_dir: Path, auth=None, chunk_size=8192):
         self.chunk_size = chunk_size
         self.auth = auth
         self.tmp_dir = tmp_dir
         self.has_changed = has_changed
 
-    def download(self, url, file_id) -> Tuple[bool, Resource]:
+    def download(self, url: str, file_id: str) -> Tuple[bool, Resource]:
         sha1sum = hashlib.sha1()
         size = 0
         with requests.get(url, stream=True, auth=self.auth) as r:
             if 'content-length' in r.headers:
                 size = int(r.headers['content-length'])
                 if not self.has_changed(file_id, size=size):
-                    return False, Resource(name=file_id)
+                    return False, Resource(name=file_id, size=size)
             print(f"Downloading {file_id}...")
             r.raise_for_status()
             bar = ProgressBar(
