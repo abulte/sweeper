@@ -6,8 +6,8 @@
 
 ## TODO
 
-- [ ] s3 gateway
 - [ ] docs
+- [x] s3 gateway
 - [x] logger w/ colors
 - [x] refactor metadata abstraction and db connection
 - [x] chunked upload to datagouvfr (RAM limitations, true story)

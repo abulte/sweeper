@@ -1,10 +1,14 @@
 import hashlib
 import io
 
+import boto3
 import pytest
+
+from moto import mock_s3
 
 from sweeper.gateways.datagouvfr import DataGouvFrGateway
 from sweeper.gateways.http import HTTPDownloadGateway
+from sweeper.gateways.s3 import S3Gateway
 
 
 class TestHTTP():
@@ -155,3 +159,24 @@ class TestDataGouvFr():
             "url": "https://example.com/dataset",
             "dummy": "dumdum",
         }
+
+
+class TestS3():
+
+    @pytest.fixture
+    def s3(self):
+        with mock_s3():
+            yield boto3.client("s3")
+
+    def test_upload(self, tmp_path, s3):
+        s3.create_bucket(Bucket="test-bucket")
+        gw = S3Gateway("test-bucket")
+        tmp_file = tmp_path / "test.csv"
+        tmp_file.write_text("file content")
+
+        gw.upload(tmp_file, "mydir/test.csv")
+
+        content = io.BytesIO()
+        gw.s3.Bucket("test-bucket").download_fileobj("mydir/test.csv", content)
+        content.seek(0)
+        assert content.read() == tmp_file.read_bytes()
