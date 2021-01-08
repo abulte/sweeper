@@ -7,8 +7,8 @@
 ## TODO
 
 - [ ] s3 gateway
+- [ ] logger w/ colors
 - [x] refactor metadata abstraction and db connection
-- [ ] chunked upload to datagouvfr (RAM limitations, true story)
-- [ ] logger
+- [x] chunked upload to datagouvfr (RAM limitations, true story)
 - [x] first round of tests
-- [ ] test gateways independantly (http content-length stuff for example)
+- [x] test gateways independantly (http content-length stuff for example)

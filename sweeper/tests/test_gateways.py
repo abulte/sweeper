@@ -118,6 +118,28 @@ class TestDataGouvFr():
         assert r.json() == {"title": "new"}
         assert res == {"title": "new"}
 
+    def test_upload_replace_resource_w_update_chunk(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway("TOKEN")
+        pmock = requests_mock.post(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/upload/",
+            json={"title": "old", "success": True},
+        )
+        umock = requests_mock.put(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/",
+            json={"title": "new"}
+        )
+        tmp_file = tmp_path / "test.csv"
+        # file has to be bigger than chunk_size (2000000)
+        chunk_size = 2000000
+        with tmp_file.open("wb") as f:
+            size = int(chunk_size * 1.5)
+            f.truncate(size)
+        gw.upload_replace_resource("dataset_id", "resource_id", tmp_file,
+                                   title="new", ignoreme="nothing")
+        assert umock.called
+        # 2 calls for chunks + 1 for final transmission
+        assert pmock.call_count == 3
+
     def test_remote_replace_resource(self, requests_mock):
         gw = DataGouvFrGateway("TOKEN")
         pmock = requests_mock.put(
