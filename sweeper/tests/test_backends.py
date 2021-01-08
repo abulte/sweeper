@@ -32,10 +32,10 @@ class TestGenericBackend():
 
 @pytest.fixture
 def mock_ssh(mocker):
-    mocker.patch("sweeper.gateways.ssh.SSHGateway.__init__", return_value=None)
-    umock = mocker.patch("sweeper.gateways.ssh.SSHGateway.upload", return_value=None)
-    mocker.patch("sweeper.gateways.ssh.SSHGateway.teardown", return_value=None)
-    return umock
+    m1 = mocker.patch("sweeper.gateways.ssh.SSHGateway.__init__", return_value=None)
+    m2 = mocker.patch("sweeper.gateways.ssh.SSHGateway.upload", return_value=None)
+    m3 = mocker.patch("sweeper.gateways.ssh.SSHGateway.teardown", return_value=None)
+    return [m1, m2, m3]
 
 
 class TestSireneBackend():
@@ -64,7 +64,8 @@ class TestSireneBackend():
             json={},
         )
         backend.run()
-        assert mock_ssh.called
+        for m in mock_ssh:
+            assert m.called
         assert fmock.called
         assert pmock.called
 

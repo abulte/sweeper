@@ -3,6 +3,7 @@ import io
 
 import pytest
 
+from sweeper.gateways.datagouvfr import DataGouvFrGateway
 from sweeper.gateways.http import HTTPDownloadGateway
 
 
@@ -77,3 +78,58 @@ class TestHTTP():
         assert resource.size == 1
         assert resource.sha1sum is None
         spy_changed.assert_called_once_with("dumdum", size=1)
+
+
+class TestDataGouvFr():
+
+    def test_upload_replace_resource_no_update(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway("TOKEN")
+        pmock = requests_mock.post(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/upload/",
+            json={"title": "old"},
+        )
+        tmp_file = tmp_path / "test.csv"
+        tmp_file.write_text("file content")
+        res = gw.upload_replace_resource("dataset_id", "resource_id", tmp_file)
+        assert pmock.called
+        r = pmock.last_request
+        assert r.headers["x-api-key"] == "TOKEN"
+        # no way to access .files in requests-mock
+        assert "file content" in r.text
+        assert res == {"title": "old"}
+
+    def test_upload_replace_resource_w_update(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway("TOKEN")
+        requests_mock.post(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/upload/",
+            json={"title": "old"},
+        )
+        umock = requests_mock.put(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/",
+            json={"title": "new"}
+        )
+        tmp_file = tmp_path / "test.csv"
+        tmp_file.write_text("file content")
+        res = gw.upload_replace_resource("dataset_id", "resource_id", tmp_file,
+                                         title="new", ignoreme="nothing")
+        assert umock.called
+        r = umock.last_request
+        assert r.headers["x-api-key"] == "TOKEN"
+        assert r.json() == {"title": "new"}
+        assert res == {"title": "new"}
+
+    def test_remote_replace_resource(self, requests_mock):
+        gw = DataGouvFrGateway("TOKEN")
+        pmock = requests_mock.put(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/",
+            json={},
+        )
+        gw.remote_replace_resource("dataset_id", "resource_id", "https://example.com/dataset",
+                                   "title", dummy="dumdum")
+        assert pmock.called
+        assert pmock.last_request.headers["x-api-key"] == "TOKEN"
+        assert pmock.last_request.json() == {
+            "title": "title",
+            "url": "https://example.com/dataset",
+            "dummy": "dumdum",
+        }
