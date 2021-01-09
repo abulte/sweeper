@@ -160,6 +160,26 @@ class TestDataGouvFr():
             "dummy": "dumdum",
         }
 
+    def test_upload_add_resource_w_update(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway("TOKEN")
+        requests_mock.post(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/upload/",
+            json={"title": "old", "id": "resource_id"},
+        )
+        umock = requests_mock.put(
+            "https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/",
+            json={"title": "new"}
+        )
+        tmp_file = tmp_path / "test.csv"
+        tmp_file.write_text("file content")
+        res = gw.upload_add_resource("dataset_id", tmp_file,
+                                     title="new", ignoreme="nothing")
+        assert res == {"title": "new"}
+        assert umock.called
+        r = umock.last_request
+        assert r.headers["x-api-key"] == "TOKEN"
+        assert r.json() == {"title": "new", "id": "resource_id"}
+
 
 class TestS3():
 
