@@ -7,6 +7,7 @@ from pathlib import Path
 
 @dataclass
 class Resource():
+    """Resource model"""
     name: str
     sha1sum: typing.Optional[str] = None
     size: typing.Optional[int] = None

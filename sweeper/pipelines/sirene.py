@@ -1,5 +1,16 @@
-"""Get files from INSEE SIRENE HTTP 'API'
+"""Get files from INSEE SIRENE HTTP "API".
 
+Steps :
+
+- get the list of files (see below)
+- download them and see if they have changed since last run
+- if they did change
+    - upload to files.data.gouv.fr both with and without timestamp
+    - update data.gouv.fr's resources according to `sirene.config.mapping` in `jobs.toml`
+
+This is what we're expecting as a source file:
+
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <ns2:ServiceDepotRetrait xmlns:ns2="http://xml.insee.fr/schema/outils">
    <Fichiers>
@@ -23,6 +34,7 @@
       <URI>https://echanges.insee.fr/ressources/apisir-etalab/fichier/StockEtablissementLiensSuccession_utf8.zip</URI>
    </Fichiers>
 </ns2:ServiceDepotRetrait>
+```
 """
 import logging
 from datetime import datetime, date

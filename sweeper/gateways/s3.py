@@ -10,17 +10,20 @@ class S3Gateway():
     """
     Upload to S3
 
+    For access configuration, you can use:
+
+    - `AWS_ACCESS_KEY_ID` The access key for your AWS account.
+    - `AWS_SECRET_ACCESS_KEY` The secret key for your AWS account.
+
+    or other standard methods
+    https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html
+
     Example usage:
     ```
     gw = S3Gateway("test-bucket", s3_endpoint_url="https://object.example.com")
     gw.upload("/tmp/monfichier.csv", "mydir/monfichier.csv")
     ```
 
-    For access configuration, you can use:
-    - AWS_ACCESS_KEY_ID The access key for your AWS account.
-    - AWS_SECRET_ACCESS_KEY The secret key for your AWS account.
-    or other standard methods
-    https://boto3.amazonaws.com/v1/documentation/api/latest/guide/configuration.html
     """
 
     def __init__(self, bucket: str, s3_endpoint_url: str = None):
