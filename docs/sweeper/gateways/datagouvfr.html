@@ -41,12 +41,27 @@ log = logging.getLogger(__name__)
 
 
 class DataGouvFrGateway():
+    &#34;&#34;&#34;
+    Upload to [data.gouv.fr](https://www.data.gouv.fr).
+
+    Example usage (replace a resource by uploading a local file):
+    ```python
+    gw = DataGouvFrGateway(&#34;secret-api-token&#34;)
+    gw.upload_replace_resource(
+        &#34;mon-dataset&#34;,
+        &#34;afc7986c-ef6c-42e1-989c-0a9a498dd6f0&#34;,
+        Path(&#34;./fichier.zip&#34;),
+        title=&#34;Mon fichier&#34;
+    )
+    ```
+    &#34;&#34;&#34;
     def __init__(self, token: typing.Optional[str], demo=False):
         self.token = token
         self.domain = f&#34;https://{&#39;demo&#39; if demo else &#39;www&#39;}.data.gouv.fr&#34;
         self.base_url = f&#34;{self.domain}/api/1&#34;
 
     def update_resource(self, dataset_id, resource_id, **kwargs) -&gt; dict:
+        &#34;&#34;&#34;Helper function to update a resource (PUT)&#34;&#34;&#34;
         r = requests.put(
             f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/&#34;,
             json=kwargs,
@@ -55,7 +70,7 @@ class DataGouvFrGateway():
         r.raise_for_status()
         return r.json()
 
-    def chunk_upload(self, url: str, filepath: Path, chunk_size: int):
+    def _chunk_upload(self, url: str, filepath: Path, chunk_size: int):
         index = 0
         size = filepath.stat().st_size
         total_parts = math.ceil(size / chunk_size)
@@ -95,6 +110,11 @@ class DataGouvFrGateway():
     def upload_replace_resource(
         self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
     ) -&gt; dict:
+        &#34;&#34;&#34;
+        Replace a resource by uploading a local file.
+
+        Supports chunked upload for files &gt; 2MB.
+        &#34;&#34;&#34;
         chunk_size = 2000000
         url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
         log.info(f&#34;Replacing file resource {url}...&#34;)
@@ -107,7 +127,7 @@ class DataGouvFrGateway():
             r.raise_for_status()
             data = r.json()
         else:
-            data = self.chunk_upload(url, filepath, chunk_size)
+            data = self._chunk_upload(url, filepath, chunk_size)
         # make a second request with updated kwargs &lt;-&gt; resource attributes if any
         if any([kw in data for kw in kwargs]):
             for kw, v in kwargs.items():
@@ -120,6 +140,7 @@ class DataGouvFrGateway():
         raise NotImplementedError
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -&gt; dict:
+        &#34;&#34;&#34;Replace a remote resource by updating (at least) url and title&#34;&#34;&#34;
         resource_url = f&#34;{self.domain}/datasets/{dataset_id}/#resource-{resource_id}&#34;
         log.info(f&#34;Replacing remote resource {resource_url}: {title} | {url}...&#34;)
         return self.update_resource(dataset_id, resource_id, **{
@@ -146,18 +167,42 @@ class DataGouvFrGateway():
 <span>(</span><span>token: Optional[str], demo=False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Upload to <a href="https://www.data.gouv.fr">data.gouv.fr</a>.</p>
+<p>Example usage (replace a resource by uploading a local file):</p>
+<pre><code class="language-python">gw = DataGouvFrGateway(&quot;secret-api-token&quot;)
+gw.upload_replace_resource(
+    &quot;mon-dataset&quot;,
+    &quot;afc7986c-ef6c-42e1-989c-0a9a498dd6f0&quot;,
+    Path(&quot;./fichier.zip&quot;),
+    title=&quot;Mon fichier&quot;
+)
+</code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DataGouvFrGateway():
+    &#34;&#34;&#34;
+    Upload to [data.gouv.fr](https://www.data.gouv.fr).
+
+    Example usage (replace a resource by uploading a local file):
+    ```python
+    gw = DataGouvFrGateway(&#34;secret-api-token&#34;)
+    gw.upload_replace_resource(
+        &#34;mon-dataset&#34;,
+        &#34;afc7986c-ef6c-42e1-989c-0a9a498dd6f0&#34;,
+        Path(&#34;./fichier.zip&#34;),
+        title=&#34;Mon fichier&#34;
+    )
+    ```
+    &#34;&#34;&#34;
     def __init__(self, token: typing.Optional[str], demo=False):
         self.token = token
         self.domain = f&#34;https://{&#39;demo&#39; if demo else &#39;www&#39;}.data.gouv.fr&#34;
         self.base_url = f&#34;{self.domain}/api/1&#34;
 
     def update_resource(self, dataset_id, resource_id, **kwargs) -&gt; dict:
+        &#34;&#34;&#34;Helper function to update a resource (PUT)&#34;&#34;&#34;
         r = requests.put(
             f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/&#34;,
             json=kwargs,
@@ -166,7 +211,7 @@ class DataGouvFrGateway():
         r.raise_for_status()
         return r.json()
 
-    def chunk_upload(self, url: str, filepath: Path, chunk_size: int):
+    def _chunk_upload(self, url: str, filepath: Path, chunk_size: int):
         index = 0
         size = filepath.stat().st_size
         total_parts = math.ceil(size / chunk_size)
@@ -206,6 +251,11 @@ class DataGouvFrGateway():
     def upload_replace_resource(
         self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
     ) -&gt; dict:
+        &#34;&#34;&#34;
+        Replace a resource by uploading a local file.
+
+        Supports chunked upload for files &gt; 2MB.
+        &#34;&#34;&#34;
         chunk_size = 2000000
         url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
         log.info(f&#34;Replacing file resource {url}...&#34;)
@@ -218,7 +268,7 @@ class DataGouvFrGateway():
             r.raise_for_status()
             data = r.json()
         else:
-            data = self.chunk_upload(url, filepath, chunk_size)
+            data = self._chunk_upload(url, filepath, chunk_size)
         # make a second request with updated kwargs &lt;-&gt; resource attributes if any
         if any([kw in data for kw in kwargs]):
             for kw, v in kwargs.items():
@@ -231,6 +281,7 @@ class DataGouvFrGateway():
         raise NotImplementedError
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -&gt; dict:
+        &#34;&#34;&#34;Replace a remote resource by updating (at least) url and title&#34;&#34;&#34;
         resource_url = f&#34;{self.domain}/datasets/{dataset_id}/#resource-{resource_id}&#34;
         log.info(f&#34;Replacing remote resource {resource_url}: {title} | {url}...&#34;)
         return self.update_resource(dataset_id, resource_id, **{
@@ -244,53 +295,6 @@ class DataGouvFrGateway():
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.chunk_upload"><code class="name flex">
-<span>def <span class="ident">chunk_upload</span></span>(<span>self, url: str, filepath: pathlib.Path, chunk_size: int)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def chunk_upload(self, url: str, filepath: Path, chunk_size: int):
-    index = 0
-    size = filepath.stat().st_size
-    total_parts = math.ceil(size / chunk_size)
-    uuid = str(uuid4())
-    transfered = 0
-    bar = ProgressBar(
-        template=&#34;|{animation}| {done:B}/{total:B} ({speed:B}/s)&#34;,
-        total=size,
-    )
-    # tuples for multipart form data compliance
-    data = {
-        &#34;totalparts&#34;: (&#34;&#34;, total_parts),
-        &#34;size&#34;: (&#34;&#34;, size),
-        &#34;filename&#34;: (&#34;&#34;, filepath.name),
-        &#34;uuid&#34;: (&#34;&#34;, uuid),
-    }
-    with filepath.open(&#34;rb&#34;) as f:
-        while True:
-            chunk = f.read(chunk_size)
-            if not len(chunk):
-                r = requests.post(url, files=data, headers={&#34;X-Api-Key&#34;: self.token})
-                r.raise_for_status()
-                return r.json()
-            chunk_data = dict(data, **{
-                &#34;partindex&#34;: (&#34;&#34;, index),
-                &#34;chunksize&#34;: (&#34;&#34;, len(chunk)),
-                &#34;partbyteoffset&#34;: (&#34;&#34;, transfered),
-                &#34;file&#34;: (&#34;blob&#34;, chunk)
-            })
-            r = requests.post(url, files=chunk_data, headers={&#34;X-Api-Key&#34;: self.token})
-            r.raise_for_status()
-            assert r.json()[&#34;success&#34;]
-            index += 1
-            transfered += len(chunk)
-            bar.update(done=transfered)</code></pre>
-</details>
-</dd>
 <dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource"><code class="name flex">
 <span>def <span class="ident">remote_add_resource</span></span>(<span>self, dataset_id, url, title, **kwargs)</span>
 </code></dt>
@@ -308,12 +312,13 @@ class DataGouvFrGateway():
 <span>def <span class="ident">remote_replace_resource</span></span>(<span>self, dataset_id, resource_id, url, title, **kwargs) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Replace a remote resource by updating (at least) url and title</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -&gt; dict:
+    &#34;&#34;&#34;Replace a remote resource by updating (at least) url and title&#34;&#34;&#34;
     resource_url = f&#34;{self.domain}/datasets/{dataset_id}/#resource-{resource_id}&#34;
     log.info(f&#34;Replacing remote resource {resource_url}: {title} | {url}...&#34;)
     return self.update_resource(dataset_id, resource_id, **{
@@ -327,12 +332,13 @@ class DataGouvFrGateway():
 <span>def <span class="ident">update_resource</span></span>(<span>self, dataset_id, resource_id, **kwargs) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Helper function to update a resource (PUT)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def update_resource(self, dataset_id, resource_id, **kwargs) -&gt; dict:
+    &#34;&#34;&#34;Helper function to update a resource (PUT)&#34;&#34;&#34;
     r = requests.put(
         f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/&#34;,
         json=kwargs,
@@ -359,7 +365,8 @@ class DataGouvFrGateway():
 <span>def <span class="ident">upload_replace_resource</span></span>(<span>self, dataset_id: str, resource_id: str, filepath: pathlib.Path, **kwargs) ‑> dict</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Replace a resource by uploading a local file.</p>
+<p>Supports chunked upload for files &gt; 2MB.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -367,6 +374,11 @@ class DataGouvFrGateway():
 <pre><code class="python">def upload_replace_resource(
     self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
 ) -&gt; dict:
+    &#34;&#34;&#34;
+    Replace a resource by uploading a local file.
+
+    Supports chunked upload for files &gt; 2MB.
+    &#34;&#34;&#34;
     chunk_size = 2000000
     url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
     log.info(f&#34;Replacing file resource {url}...&#34;)
@@ -379,7 +391,7 @@ class DataGouvFrGateway():
         r.raise_for_status()
         data = r.json()
     else:
-        data = self.chunk_upload(url, filepath, chunk_size)
+        data = self._chunk_upload(url, filepath, chunk_size)
     # make a second request with updated kwargs &lt;-&gt; resource attributes if any
     if any([kw in data for kw in kwargs]):
         for kw, v in kwargs.items():
@@ -410,7 +422,6 @@ class DataGouvFrGateway():
 <li>
 <h4><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway">DataGouvFrGateway</a></code></h4>
 <ul class="">
-<li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.chunk_upload" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.chunk_upload">chunk_upload</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource">remote_add_resource</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_replace_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_replace_resource">remote_replace_resource</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.update_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.update_resource">update_resource</a></code></li>

@@ -13,12 +13,27 @@ log = logging.getLogger(__name__)
 
 
 class DataGouvFrGateway():
+    """
+    Upload to [data.gouv.fr](https://www.data.gouv.fr).
+
+    Example usage (replace a resource by uploading a local file):
+    ```python
+    gw = DataGouvFrGateway("secret-api-token")
+    gw.upload_replace_resource(
+        "mon-dataset",
+        "afc7986c-ef6c-42e1-989c-0a9a498dd6f0",
+        Path("./fichier.zip"),
+        title="Mon fichier"
+    )
+    ```
+    """
     def __init__(self, token: typing.Optional[str], demo=False):
         self.token = token
         self.domain = f"https://{'demo' if demo else 'www'}.data.gouv.fr"
         self.base_url = f"{self.domain}/api/1"
 
     def update_resource(self, dataset_id, resource_id, **kwargs) -> dict:
+        """Helper function to update a resource (PUT)"""
         r = requests.put(
             f"{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/",
             json=kwargs,
@@ -27,7 +42,7 @@ class DataGouvFrGateway():
         r.raise_for_status()
         return r.json()
 
-    def chunk_upload(self, url: str, filepath: Path, chunk_size: int):
+    def _chunk_upload(self, url: str, filepath: Path, chunk_size: int):
         index = 0
         size = filepath.stat().st_size
         total_parts = math.ceil(size / chunk_size)
@@ -67,6 +82,11 @@ class DataGouvFrGateway():
     def upload_replace_resource(
         self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
     ) -> dict:
+        """
+        Replace a resource by uploading a local file.
+
+        Supports chunked upload for files > 2MB.
+        """
         chunk_size = 2000000
         url = f"{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/"
         log.info(f"Replacing file resource {url}...")
@@ -79,7 +99,7 @@ class DataGouvFrGateway():
             r.raise_for_status()
             data = r.json()
         else:
-            data = self.chunk_upload(url, filepath, chunk_size)
+            data = self._chunk_upload(url, filepath, chunk_size)
         # make a second request with updated kwargs <-> resource attributes if any
         if any([kw in data for kw in kwargs]):
             for kw, v in kwargs.items():
@@ -92,6 +112,7 @@ class DataGouvFrGateway():
         raise NotImplementedError
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -> dict:
+        """Replace a remote resource by updating (at least) url and title"""
         resource_url = f"{self.domain}/datasets/{dataset_id}/#resource-{resource_id}"
         log.info(f"Replacing remote resource {resource_url}: {title} | {url}...")
         return self.update_resource(dataset_id, resource_id, **{
