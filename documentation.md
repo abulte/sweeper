@@ -29,7 +29,7 @@ A pipeline is a set of orchestrated operations around data files pertaining to a
 
 A pipeline is just standard python code organized in a class. Default pipelines are defined in `sweeper.pipelines`. All pipelines should inherit from `sweeper.pipelines.base.BasePipeline`.
 
-A pipeline is run through `sweeper.run` (cf [usage]).
+A pipeline is run through `sweeper run` (cf [usage]).
 
 ### Gateways
 
