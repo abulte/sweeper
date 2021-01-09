@@ -55,6 +55,9 @@ class DataGouvFrGateway():
     )
     ```
     &#34;&#34;&#34;
+    CHUNK_SIZE = 2000000
+    &#34;&#34;&#34;Acts as lower limit for chunk upload and chunk size&#34;&#34;&#34;
+
     def __init__(self, token: typing.Optional[str], demo=False):
         self.token = token
         self.domain = f&#34;https://{&#39;demo&#39; if demo else &#39;www&#39;}.data.gouv.fr&#34;
@@ -70,10 +73,11 @@ class DataGouvFrGateway():
         r.raise_for_status()
         return r.json()
 
-    def _chunk_upload(self, url: str, filepath: Path, chunk_size: int):
+    def post_file_chunked(self, url: str, filepath: Path):
+        &#34;&#34;&#34;Helper function to post a local file to given url, with chunked upload&#34;&#34;&#34;
         index = 0
         size = filepath.stat().st_size
-        total_parts = math.ceil(size / chunk_size)
+        total_parts = math.ceil(size / self.CHUNK_SIZE)
         uuid = str(uuid4())
         transfered = 0
         bar = ProgressBar(
@@ -89,7 +93,7 @@ class DataGouvFrGateway():
         }
         with filepath.open(&#34;rb&#34;) as f:
             while True:
-                chunk = f.read(chunk_size)
+                chunk = f.read(self.CHUNK_SIZE)
                 if not len(chunk):
                     r = requests.post(url, files=data, headers={&#34;X-Api-Key&#34;: self.token})
                     r.raise_for_status()
@@ -107,6 +111,27 @@ class DataGouvFrGateway():
                 transfered += len(chunk)
                 bar.update(done=transfered)
 
+    def _is_chunked(self, filepath: Path) -&gt; bool:
+        return filepath.stat().st_size &lt;= self.CHUNK_SIZE
+
+    def post_file(self, url, filepath):
+        &#34;&#34;&#34;Helper function to post a local file to given url&#34;&#34;&#34;
+        r = requests.post(
+            url,
+            files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
+            headers={&#34;X-Api-Key&#34;: self.token},
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def _update_from_kwargs(self, data: dict, kwargs: dict):
+        &#34;&#34;&#34;Update data dict with kwargs if any key matches&#34;&#34;&#34;
+        if any([kw in data for kw in kwargs]):
+            for kw, v in kwargs.items():
+                if kw in data:
+                    data[kw] = v
+            return data
+
     def upload_replace_resource(
         self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
     ) -&gt; dict:
@@ -115,29 +140,36 @@ class DataGouvFrGateway():
 
         Supports chunked upload for files &gt; 2MB.
         &#34;&#34;&#34;
-        chunk_size = 2000000
         url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
         log.info(f&#34;Replacing file resource {url}...&#34;)
-        if filepath.stat().st_size &lt;= chunk_size:
-            r = requests.post(
-                url,
-                files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
-                headers={&#34;X-Api-Key&#34;: self.token},
-            )
-            r.raise_for_status()
-            data = r.json()
+        if self._is_chunked(filepath):
+            data = self.post_file(url, filepath)
         else:
-            data = self._chunk_upload(url, filepath, chunk_size)
+            data = self.post_file_chunked(url, filepath)
         # make a second request with updated kwargs &lt;-&gt; resource attributes if any
-        if any([kw in data for kw in kwargs]):
-            for kw, v in kwargs.items():
-                if kw in data:
-                    data[kw] = v
-            data = self.update_resource(dataset_id, resource_id, **data)
+        update = self._update_from_kwargs(data, kwargs)
+        if update:
+            data = self.update_resource(dataset_id, resource_id, **update)
         return data
 
     def upload_add_resource(self, dataset_id, filepath, type=&#39;main&#39;, **kwargs):
-        raise NotImplementedError
+        &#34;&#34;&#34;
+        Add a new resource to a dataset by uploading a local file.
+
+        Supports chunked upload for files &gt; 2MB.
+        &#34;&#34;&#34;
+        url = f&#34;{self.base_url}/datasets/{dataset_id}/upload/&#34;
+        log.info(f&#34;Adding file to {dataset_id} w/ resource {filepath}...&#34;)
+        if self._is_chunked(filepath):
+            data = self.post_file(url, filepath)
+        else:
+            data = self.post_file_chunked(url, filepath)
+        # make a second request with updated kwargs &lt;-&gt; resource attributes if any
+        update = self._update_from_kwargs(data, kwargs)
+        if update:
+            resource_id = update[&#34;id&#34;]
+            data = self.update_resource(dataset_id, resource_id, **update)
+        return data
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -&gt; dict:
         &#34;&#34;&#34;Replace a remote resource by updating (at least) url and title&#34;&#34;&#34;
@@ -196,6 +228,9 @@ gw.upload_replace_resource(
     )
     ```
     &#34;&#34;&#34;
+    CHUNK_SIZE = 2000000
+    &#34;&#34;&#34;Acts as lower limit for chunk upload and chunk size&#34;&#34;&#34;
+
     def __init__(self, token: typing.Optional[str], demo=False):
         self.token = token
         self.domain = f&#34;https://{&#39;demo&#39; if demo else &#39;www&#39;}.data.gouv.fr&#34;
@@ -211,10 +246,11 @@ gw.upload_replace_resource(
         r.raise_for_status()
         return r.json()
 
-    def _chunk_upload(self, url: str, filepath: Path, chunk_size: int):
+    def post_file_chunked(self, url: str, filepath: Path):
+        &#34;&#34;&#34;Helper function to post a local file to given url, with chunked upload&#34;&#34;&#34;
         index = 0
         size = filepath.stat().st_size
-        total_parts = math.ceil(size / chunk_size)
+        total_parts = math.ceil(size / self.CHUNK_SIZE)
         uuid = str(uuid4())
         transfered = 0
         bar = ProgressBar(
@@ -230,7 +266,7 @@ gw.upload_replace_resource(
         }
         with filepath.open(&#34;rb&#34;) as f:
             while True:
-                chunk = f.read(chunk_size)
+                chunk = f.read(self.CHUNK_SIZE)
                 if not len(chunk):
                     r = requests.post(url, files=data, headers={&#34;X-Api-Key&#34;: self.token})
                     r.raise_for_status()
@@ -248,6 +284,27 @@ gw.upload_replace_resource(
                 transfered += len(chunk)
                 bar.update(done=transfered)
 
+    def _is_chunked(self, filepath: Path) -&gt; bool:
+        return filepath.stat().st_size &lt;= self.CHUNK_SIZE
+
+    def post_file(self, url, filepath):
+        &#34;&#34;&#34;Helper function to post a local file to given url&#34;&#34;&#34;
+        r = requests.post(
+            url,
+            files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
+            headers={&#34;X-Api-Key&#34;: self.token},
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def _update_from_kwargs(self, data: dict, kwargs: dict):
+        &#34;&#34;&#34;Update data dict with kwargs if any key matches&#34;&#34;&#34;
+        if any([kw in data for kw in kwargs]):
+            for kw, v in kwargs.items():
+                if kw in data:
+                    data[kw] = v
+            return data
+
     def upload_replace_resource(
         self, dataset_id: str, resource_id: str, filepath: Path, **kwargs
     ) -&gt; dict:
@@ -256,29 +313,36 @@ gw.upload_replace_resource(
 
         Supports chunked upload for files &gt; 2MB.
         &#34;&#34;&#34;
-        chunk_size = 2000000
         url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
         log.info(f&#34;Replacing file resource {url}...&#34;)
-        if filepath.stat().st_size &lt;= chunk_size:
-            r = requests.post(
-                url,
-                files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
-                headers={&#34;X-Api-Key&#34;: self.token},
-            )
-            r.raise_for_status()
-            data = r.json()
+        if self._is_chunked(filepath):
+            data = self.post_file(url, filepath)
         else:
-            data = self._chunk_upload(url, filepath, chunk_size)
+            data = self.post_file_chunked(url, filepath)
         # make a second request with updated kwargs &lt;-&gt; resource attributes if any
-        if any([kw in data for kw in kwargs]):
-            for kw, v in kwargs.items():
-                if kw in data:
-                    data[kw] = v
-            data = self.update_resource(dataset_id, resource_id, **data)
+        update = self._update_from_kwargs(data, kwargs)
+        if update:
+            data = self.update_resource(dataset_id, resource_id, **update)
         return data
 
     def upload_add_resource(self, dataset_id, filepath, type=&#39;main&#39;, **kwargs):
-        raise NotImplementedError
+        &#34;&#34;&#34;
+        Add a new resource to a dataset by uploading a local file.
+
+        Supports chunked upload for files &gt; 2MB.
+        &#34;&#34;&#34;
+        url = f&#34;{self.base_url}/datasets/{dataset_id}/upload/&#34;
+        log.info(f&#34;Adding file to {dataset_id} w/ resource {filepath}...&#34;)
+        if self._is_chunked(filepath):
+            data = self.post_file(url, filepath)
+        else:
+            data = self.post_file_chunked(url, filepath)
+        # make a second request with updated kwargs &lt;-&gt; resource attributes if any
+        update = self._update_from_kwargs(data, kwargs)
+        if update:
+            resource_id = update[&#34;id&#34;]
+            data = self.update_resource(dataset_id, resource_id, **update)
+        return data
 
     def remote_replace_resource(self, dataset_id, resource_id, url, title, **kwargs) -&gt; dict:
         &#34;&#34;&#34;Replace a remote resource by updating (at least) url and title&#34;&#34;&#34;
@@ -293,8 +357,83 @@ gw.upload_replace_resource(
     def remote_add_resource(self, dataset_id, url, title, **kwargs):
         raise NotImplementedError</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.CHUNK_SIZE"><code class="name">var <span class="ident">CHUNK_SIZE</span></code></dt>
+<dd>
+<div class="desc"><p>Acts as lower limit for chunk upload and chunk size</p></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
+<dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file"><code class="name flex">
+<span>def <span class="ident">post_file</span></span>(<span>self, url, filepath)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper function to post a local file to given url</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def post_file(self, url, filepath):
+    &#34;&#34;&#34;Helper function to post a local file to given url&#34;&#34;&#34;
+    r = requests.post(
+        url,
+        files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
+        headers={&#34;X-Api-Key&#34;: self.token},
+    )
+    r.raise_for_status()
+    return r.json()</code></pre>
+</details>
+</dd>
+<dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file_chunked"><code class="name flex">
+<span>def <span class="ident">post_file_chunked</span></span>(<span>self, url: str, filepath: pathlib.Path)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper function to post a local file to given url, with chunked upload</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def post_file_chunked(self, url: str, filepath: Path):
+    &#34;&#34;&#34;Helper function to post a local file to given url, with chunked upload&#34;&#34;&#34;
+    index = 0
+    size = filepath.stat().st_size
+    total_parts = math.ceil(size / self.CHUNK_SIZE)
+    uuid = str(uuid4())
+    transfered = 0
+    bar = ProgressBar(
+        template=&#34;|{animation}| {done:B}/{total:B} ({speed:B}/s)&#34;,
+        total=size,
+    )
+    # tuples for multipart form data compliance
+    data = {
+        &#34;totalparts&#34;: (&#34;&#34;, total_parts),
+        &#34;size&#34;: (&#34;&#34;, size),
+        &#34;filename&#34;: (&#34;&#34;, filepath.name),
+        &#34;uuid&#34;: (&#34;&#34;, uuid),
+    }
+    with filepath.open(&#34;rb&#34;) as f:
+        while True:
+            chunk = f.read(self.CHUNK_SIZE)
+            if not len(chunk):
+                r = requests.post(url, files=data, headers={&#34;X-Api-Key&#34;: self.token})
+                r.raise_for_status()
+                return r.json()
+            chunk_data = dict(data, **{
+                &#34;partindex&#34;: (&#34;&#34;, index),
+                &#34;chunksize&#34;: (&#34;&#34;, len(chunk)),
+                &#34;partbyteoffset&#34;: (&#34;&#34;, transfered),
+                &#34;file&#34;: (&#34;blob&#34;, chunk)
+            })
+            r = requests.post(url, files=chunk_data, headers={&#34;X-Api-Key&#34;: self.token})
+            r.raise_for_status()
+            assert r.json()[&#34;success&#34;]
+            index += 1
+            transfered += len(chunk)
+            bar.update(done=transfered)</code></pre>
+</details>
+</dd>
 <dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource"><code class="name flex">
 <span>def <span class="ident">remote_add_resource</span></span>(<span>self, dataset_id, url, title, **kwargs)</span>
 </code></dt>
@@ -352,13 +491,30 @@ gw.upload_replace_resource(
 <span>def <span class="ident">upload_add_resource</span></span>(<span>self, dataset_id, filepath, type='main', **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Add a new resource to a dataset by uploading a local file.</p>
+<p>Supports chunked upload for files &gt; 2MB.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def upload_add_resource(self, dataset_id, filepath, type=&#39;main&#39;, **kwargs):
-    raise NotImplementedError</code></pre>
+    &#34;&#34;&#34;
+    Add a new resource to a dataset by uploading a local file.
+
+    Supports chunked upload for files &gt; 2MB.
+    &#34;&#34;&#34;
+    url = f&#34;{self.base_url}/datasets/{dataset_id}/upload/&#34;
+    log.info(f&#34;Adding file to {dataset_id} w/ resource {filepath}...&#34;)
+    if self._is_chunked(filepath):
+        data = self.post_file(url, filepath)
+    else:
+        data = self.post_file_chunked(url, filepath)
+    # make a second request with updated kwargs &lt;-&gt; resource attributes if any
+    update = self._update_from_kwargs(data, kwargs)
+    if update:
+        resource_id = update[&#34;id&#34;]
+        data = self.update_resource(dataset_id, resource_id, **update)
+    return data</code></pre>
 </details>
 </dd>
 <dt id="sweeper.gateways.datagouvfr.DataGouvFrGateway.upload_replace_resource"><code class="name flex">
@@ -379,25 +535,16 @@ gw.upload_replace_resource(
 
     Supports chunked upload for files &gt; 2MB.
     &#34;&#34;&#34;
-    chunk_size = 2000000
     url = f&#34;{self.base_url}/datasets/{dataset_id}/resources/{resource_id}/upload/&#34;
     log.info(f&#34;Replacing file resource {url}...&#34;)
-    if filepath.stat().st_size &lt;= chunk_size:
-        r = requests.post(
-            url,
-            files={&#34;file&#34;: (filepath.name, filepath.read_bytes())},
-            headers={&#34;X-Api-Key&#34;: self.token},
-        )
-        r.raise_for_status()
-        data = r.json()
+    if self._is_chunked(filepath):
+        data = self.post_file(url, filepath)
     else:
-        data = self._chunk_upload(url, filepath, chunk_size)
+        data = self.post_file_chunked(url, filepath)
     # make a second request with updated kwargs &lt;-&gt; resource attributes if any
-    if any([kw in data for kw in kwargs]):
-        for kw, v in kwargs.items():
-            if kw in data:
-                data[kw] = v
-        data = self.update_resource(dataset_id, resource_id, **data)
+    update = self._update_from_kwargs(data, kwargs)
+    if update:
+        data = self.update_resource(dataset_id, resource_id, **update)
     return data</code></pre>
 </details>
 </dd>
@@ -422,6 +569,9 @@ gw.upload_replace_resource(
 <li>
 <h4><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway">DataGouvFrGateway</a></code></h4>
 <ul class="">
+<li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.CHUNK_SIZE" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.CHUNK_SIZE">CHUNK_SIZE</a></code></li>
+<li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file">post_file</a></code></li>
+<li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file_chunked" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.post_file_chunked">post_file_chunked</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_add_resource">remote_add_resource</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_replace_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.remote_replace_resource">remote_replace_resource</a></code></li>
 <li><code><a title="sweeper.gateways.datagouvfr.DataGouvFrGateway.update_resource" href="#sweeper.gateways.datagouvfr.DataGouvFrGateway.update_resource">update_resource</a></code></li>

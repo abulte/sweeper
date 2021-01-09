@@ -188,6 +188,26 @@ class TestDataGouvFr():
             &#34;dummy&#34;: &#34;dumdum&#34;,
         }
 
+    def test_upload_add_resource_w_update(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway(&#34;TOKEN&#34;)
+        requests_mock.post(
+            &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/upload/&#34;,
+            json={&#34;title&#34;: &#34;old&#34;, &#34;id&#34;: &#34;resource_id&#34;},
+        )
+        umock = requests_mock.put(
+            &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/&#34;,
+            json={&#34;title&#34;: &#34;new&#34;}
+        )
+        tmp_file = tmp_path / &#34;test.csv&#34;
+        tmp_file.write_text(&#34;file content&#34;)
+        res = gw.upload_add_resource(&#34;dataset_id&#34;, tmp_file,
+                                     title=&#34;new&#34;, ignoreme=&#34;nothing&#34;)
+        assert res == {&#34;title&#34;: &#34;new&#34;}
+        assert umock.called
+        r = umock.last_request
+        assert r.headers[&#34;x-api-key&#34;] == &#34;TOKEN&#34;
+        assert r.json() == {&#34;title&#34;: &#34;new&#34;, &#34;id&#34;: &#34;resource_id&#34;}
+
 
 class TestS3():
 
@@ -308,7 +328,27 @@ class TestS3():
             &#34;title&#34;: &#34;title&#34;,
             &#34;url&#34;: &#34;https://example.com/dataset&#34;,
             &#34;dummy&#34;: &#34;dumdum&#34;,
-        }</code></pre>
+        }
+
+    def test_upload_add_resource_w_update(self, requests_mock, tmp_path):
+        gw = DataGouvFrGateway(&#34;TOKEN&#34;)
+        requests_mock.post(
+            &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/upload/&#34;,
+            json={&#34;title&#34;: &#34;old&#34;, &#34;id&#34;: &#34;resource_id&#34;},
+        )
+        umock = requests_mock.put(
+            &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/&#34;,
+            json={&#34;title&#34;: &#34;new&#34;}
+        )
+        tmp_file = tmp_path / &#34;test.csv&#34;
+        tmp_file.write_text(&#34;file content&#34;)
+        res = gw.upload_add_resource(&#34;dataset_id&#34;, tmp_file,
+                                     title=&#34;new&#34;, ignoreme=&#34;nothing&#34;)
+        assert res == {&#34;title&#34;: &#34;new&#34;}
+        assert umock.called
+        r = umock.last_request
+        assert r.headers[&#34;x-api-key&#34;] == &#34;TOKEN&#34;
+        assert r.json() == {&#34;title&#34;: &#34;new&#34;, &#34;id&#34;: &#34;resource_id&#34;}</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -336,6 +376,36 @@ class TestS3():
         &#34;url&#34;: &#34;https://example.com/dataset&#34;,
         &#34;dummy&#34;: &#34;dumdum&#34;,
     }</code></pre>
+</details>
+</dd>
+<dt id="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_add_resource_w_update"><code class="name flex">
+<span>def <span class="ident">test_upload_add_resource_w_update</span></span>(<span>self, requests_mock, tmp_path)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def test_upload_add_resource_w_update(self, requests_mock, tmp_path):
+    gw = DataGouvFrGateway(&#34;TOKEN&#34;)
+    requests_mock.post(
+        &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/upload/&#34;,
+        json={&#34;title&#34;: &#34;old&#34;, &#34;id&#34;: &#34;resource_id&#34;},
+    )
+    umock = requests_mock.put(
+        &#34;https://www.data.gouv.fr/api/1/datasets/dataset_id/resources/resource_id/&#34;,
+        json={&#34;title&#34;: &#34;new&#34;}
+    )
+    tmp_file = tmp_path / &#34;test.csv&#34;
+    tmp_file.write_text(&#34;file content&#34;)
+    res = gw.upload_add_resource(&#34;dataset_id&#34;, tmp_file,
+                                 title=&#34;new&#34;, ignoreme=&#34;nothing&#34;)
+    assert res == {&#34;title&#34;: &#34;new&#34;}
+    assert umock.called
+    r = umock.last_request
+    assert r.headers[&#34;x-api-key&#34;] == &#34;TOKEN&#34;
+    assert r.json() == {&#34;title&#34;: &#34;new&#34;, &#34;id&#34;: &#34;resource_id&#34;}</code></pre>
 </details>
 </dd>
 <dt id="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_no_update"><code class="name flex">
@@ -775,6 +845,7 @@ def s3(self):
 <h4><code><a title="sweeper.tests.test_gateways.TestDataGouvFr" href="#sweeper.tests.test_gateways.TestDataGouvFr">TestDataGouvFr</a></code></h4>
 <ul class="">
 <li><code><a title="sweeper.tests.test_gateways.TestDataGouvFr.test_remote_replace_resource" href="#sweeper.tests.test_gateways.TestDataGouvFr.test_remote_replace_resource">test_remote_replace_resource</a></code></li>
+<li><code><a title="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_add_resource_w_update" href="#sweeper.tests.test_gateways.TestDataGouvFr.test_upload_add_resource_w_update">test_upload_add_resource_w_update</a></code></li>
 <li><code><a title="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_no_update" href="#sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_no_update">test_upload_replace_resource_no_update</a></code></li>
 <li><code><a title="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_w_update" href="#sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_w_update">test_upload_replace_resource_w_update</a></code></li>
 <li><code><a title="sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_w_update_chunk" href="#sweeper.tests.test_gateways.TestDataGouvFr.test_upload_replace_resource_w_update_chunk">test_upload_replace_resource_w_update_chunk</a></code></li>
