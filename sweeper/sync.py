@@ -1,5 +1,6 @@
 import importlib
 import locale
+import logging
 
 import coloredlogs
 from minicli import cli, run as clirun, wrap
@@ -8,8 +9,9 @@ from sweeper import close_db
 from sweeper.utils.config import load as load_config
 from sweeper.utils.metadata import Metadata
 
-# FIXME: this crashes the s3 tests when the full test suite runs :-/
-# locale.setlocale(locale.LC_TIME, "fr_FR")
+# TODO: this should be configurable
+locale.setlocale(locale.LC_TIME, "fr_FR")
+log = logging.getLogger(__name__)
 
 
 @cli
@@ -19,8 +21,11 @@ def run(job, config="jobs.toml", quiet=False):
     :job: name of the job section in jobs.toml
     """
     level = "DEBUG" if not quiet else "INFO"
-    # TODO: maybe filter out boto (or everything but sweeper)
+    mute_loggers = ["boto", "botocore", "s3transfer", "boto3"]
+    [logging.getLogger(lg).setLevel(logging.INFO) for lg in mute_loggers]
     coloredlogs.install(level=level, fmt="%(asctime)s %(name)s %(levelname)s %(message)s")
+
+    log.info(f"🧹 Sweeping files from job {job}")
 
     config = load_config(config, job)
     _mod, _class = config[job]["backend"].split(':')
@@ -46,6 +51,7 @@ def run(job, config="jobs.toml", quiet=False):
         finally:
             metadata.end(main_error, job.errors)
             job._teardown()
+            log.info("🧹 Done sweeping!")
 
 
 @wrap

@@ -10,6 +10,12 @@ class S3Gateway():
     """
     Upload to S3
 
+    Example usage:
+    ```
+    gw = S3Gateway("test-bucket", s3_endpoint_url="https://object.example.com")
+    gw.upload("/tmp/monfichier.csv", "mydir/monfichier.csv")
+    ```
+
     For access configuration, you can use:
     - AWS_ACCESS_KEY_ID The access key for your AWS account.
     - AWS_SECRET_ACCESS_KEY The secret key for your AWS account.
@@ -29,5 +35,4 @@ class S3Gateway():
     def upload(self, local: Union[str, Path], remote: str):
         if not isinstance(local, str):
             local = str(local)
-        # TODO: test that remote=(/)mydir/test.csv works correctly on real s3
         self.s3.Bucket(self.bucket).upload_file(local, remote)

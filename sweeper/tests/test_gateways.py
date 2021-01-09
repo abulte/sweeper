@@ -168,7 +168,13 @@ class TestS3():
         with mock_s3():
             yield boto3.client("s3")
 
-    def test_upload(self, tmp_path, s3):
+    @pytest.fixture
+    def locale(self):
+        """Force locale for moto https://github.com/spulec/moto/issues/2438"""
+        import locale
+        locale.setlocale(locale.LC_TIME, "C")
+
+    def test_upload(self, tmp_path, s3, locale):
         s3.create_bucket(Bucket="test-bucket")
         gw = S3Gateway("test-bucket")
         tmp_file = tmp_path / "test.csv"
