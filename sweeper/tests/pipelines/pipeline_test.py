@@ -1,8 +1,8 @@
-from sweeper.backends.base import BaseBackend
+from sweeper.pipelines.base import BasePipeline
 from sweeper.models import Resource
 
 
-class TestBackend(BaseBackend):
+class TestPipeline(BasePipeline):
     __test__ = False
     name = "test"
 
@@ -15,14 +15,14 @@ class TestBackend(BaseBackend):
         self.register_file(resource)
 
 
-class TestBackendError(TestBackend):
+class TestPipelineError(TestPipeline):
     name = "test_error"
 
     def run(self):
         raise Exception("ERROR")
 
 
-class TestBackendErrorRunError(TestBackend):
+class TestPipelineErrorRunError(TestPipeline):
     name = "test_run_error"
 
     def run(self):

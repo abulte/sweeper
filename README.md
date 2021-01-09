@@ -7,6 +7,7 @@
 ## TODO
 
 - [ ] docs
+- [x] rename backends to pipelines
 - [x] s3 gateway
 - [x] logger w/ colors
 - [x] refactor metadata abstraction and db connection

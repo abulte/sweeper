@@ -8,7 +8,8 @@ from sweeper import close_db
 from sweeper.utils.config import load as load_config
 from sweeper.utils.metadata import Metadata
 
-locale.setlocale(locale.LC_TIME, "fr_FR")
+# FIXME: this crashes the s3 tests when the full test suite runs :-/
+# locale.setlocale(locale.LC_TIME, "fr_FR")
 
 
 @cli
@@ -18,6 +19,7 @@ def run(job, config="jobs.toml", quiet=False):
     :job: name of the job section in jobs.toml
     """
     level = "DEBUG" if not quiet else "INFO"
+    # TODO: maybe filter out boto (or everything but sweeper)
     coloredlogs.install(level=level, fmt="%(asctime)s %(name)s %(levelname)s %(message)s")
 
     config = load_config(config, job)

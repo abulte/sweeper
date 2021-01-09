@@ -11,7 +11,7 @@ from sweeper.models import Resource
 log = logging.getLogger(__name__)
 
 
-class BaseBackend():
+class BasePipeline():
     name = None
 
     def __init__(self, metadata_id: int, config: dict):

@@ -2,7 +2,7 @@
 tmp_dir = "/tmp/data-gw-test"
 
 [test]
-backend = "sweeper.tests.backends.backend_test:TestBackend"
+backend = "sweeper.tests.pipelines.pipeline_test:TestPipeline"
 
 [test.config]
 foo = "bar"
@@ -11,13 +11,13 @@ foo = "bar"
 test_secret = "DATABASE_URL"
 
 [test_error]
-backend = "sweeper.tests.backends.backend_test:TestBackendError"
+backend = "sweeper.tests.pipelines.pipeline_test:TestPipelineError"
 
 [test_run_error]
-backend = "sweeper.tests.backends.backend_test:TestBackendErrorRunError"
+backend = "sweeper.tests.pipelines.pipeline_test:TestPipelineErrorRunError"
 
 [sirene]
-backend = "sweeper.backends.sirene:SireneBackend"
+backend = "sweeper.pipelines.sirene:SireneBackend"
 
 [sirene.config]
 demo = false

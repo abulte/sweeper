@@ -31,7 +31,7 @@ import xmltodict
 import requests
 from requests.auth import HTTPBasicAuth
 
-from sweeper.backends.base import BaseBackend
+from sweeper.pipelines.base import BasePipeline
 from sweeper.gateways.ssh import SSHGateway
 from sweeper.gateways.http import HTTPDownloadGateway
 from sweeper.gateways.datagouvfr import DataGouvFrGateway
@@ -40,7 +40,7 @@ from sweeper.models import Resource
 log = logging.getLogger(__name__)
 
 
-class SireneBackend(BaseBackend):
+class SirenePipeline(BasePipeline):
     name = "sirene"
 
     def pre_run(self):

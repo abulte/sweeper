@@ -2,15 +2,15 @@ import io
 
 import pytest
 
-from sweeper.backends.sirene import SireneBackend
+from sweeper.pipelines.sirene import SirenePipeline
 from sweeper.models import Resource
-from sweeper.tests.backends.backend_test import TestBackend
+from sweeper.tests.pipelines.pipeline_test import TestPipeline
 
 
 class TestGenericBackend():
 
     def test_backend(self, config, db):
-        backend = TestBackend(0, config)
+        backend = TestPipeline(0, config)
         resource = Resource(name="dumdum", sha1sum="sha1", size=1)
         backend.register_file(resource)
         # file_has_changed
@@ -41,7 +41,7 @@ def mock_ssh(mocker):
 class TestSireneBackend():
 
     def test_backend(self, config, requests_mock, mock_ssh, db):
-        backend = SireneBackend(0, config)
+        backend = SirenePipeline(0, config)
         requests_mock.get(
             "https://example.com/list.xml",
             text="""<?xml version="1.0" encoding="UTF-8"?>

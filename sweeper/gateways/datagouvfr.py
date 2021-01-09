@@ -14,8 +14,6 @@ log = logging.getLogger(__name__)
 
 class DataGouvFrGateway():
     def __init__(self, token: typing.Optional[str], demo=False):
-        if not token:
-            raise ValueError("Please provide an API token")
         self.token = token
         self.domain = f"https://{'demo' if demo else 'www'}.data.gouv.fr"
         self.base_url = f"{self.domain}/api/1"
