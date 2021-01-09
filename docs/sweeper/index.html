@@ -45,7 +45,7 @@ optional arguments:
 <h3 id="pipelines">Pipelines</h3>
 <p>A pipeline is a set of orchestrated operations around data files pertaining to a specific "business" use case. What you probably want to do with this library is to write your own pipelines. For example, you might want to take some files from a HTTP Server and push them to <a href="https://www.data.gouv.fr">data.gouv.fr</a> and/or scp them somewhere else.</p>
 <p>A pipeline is just standard python code organized in a class. Default pipelines are defined in <code><a title="sweeper.pipelines" href="pipelines/index.html">sweeper.pipelines</a></code>. All pipelines should inherit from <code><a title="sweeper.pipelines.base.BasePipeline" href="pipelines/base.html#sweeper.pipelines.base.BasePipeline">BasePipeline</a></code>.</p>
-<p>A pipeline is run through <code>sweeper.run</code> (cf <a href="#usage">usage</a>).</p>
+<p>A pipeline is run through <code><a title="sweeper" href="#sweeper">sweeper</a> run</code> (cf <a href="#usage">usage</a>).</p>
 <h3 id="gateways">Gateways</h3>
 <p>A gateway is a way to move a file to or from a specific protocol or platform. Default gateways are defined in <code><a title="sweeper.gateways" href="gateways/index.html">sweeper.gateways</a></code>. They include:</p>
 <ul>
